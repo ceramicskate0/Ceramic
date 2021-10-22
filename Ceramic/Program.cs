@@ -178,6 +178,7 @@ namespace Ceramic
 | |     / _ \| '__|/ _` || '_ ` _ \ | | / __|
 | \__/\|  __/| |  | (_| || | | | | || || (__ 
 \____/ \___ ||_|   \__,_||_| |_| |_||_| \___|
+created by: Ceramicskate0
 ");
         }
         static void Usage()
