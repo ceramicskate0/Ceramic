@@ -63,11 +63,25 @@ namespace Ceramic
                             try
                             {
                                 if (File.Exists(args[1]))
-                                { 
-                                    byte[] tmp = Crypto.Encrypt(File.ReadAllBytes(args[1]), args[2],args[3]);
-                                    Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
-                                    File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
-                                    File.WriteAllBytes("EncryptedShellcode.bin", tmp);
+                                {
+                                    if (args.Length == 4)
+                                    {
+                                        byte[] tmp = Crypto.Encrypt(File.ReadAllBytes(args[1]), Utils.StringToByteArray(args[2]), Utils.StringToByteArray(args[3]));
+                                        Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
+                                        File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
+                                        File.WriteAllBytes("EncryptedShellcode.bin", tmp);
+                                    }
+                                    else if (args.Length == 6)
+                                    {
+                                        byte[] tmp = Crypto.Encrypt(File.ReadAllBytes(args[1]), Utils.StringToByteArray(args[2]), Utils.StringToByteArray(args[3]), Utils.StringToByteArray(args[4]), Utils.StringToByteArray(args[5]));
+                                        Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
+                                        File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
+                                        File.WriteAllBytes("EncryptedShellcode.bin", tmp);
+                                    }
+                                    else
+                                    {
+                                    Console.WriteLine("[!] So you didnt put in the correct number of args count="+args.Length);
+                                    }
                                 }
                                 else
                                 {
@@ -79,7 +93,7 @@ namespace Ceramic
                                 Console.WriteLine("[!] SHIT SOMETHING WENT WRONG! "+e.Message.ToString());
                             }
                             break;
-                        case "-ConvertToHEX":
+                    case "-ConvertToHEX":
                             try
                             {
                                 if (File.Exists(args[1]))
@@ -152,7 +166,17 @@ namespace Ceramic
                                     ";
                             File.WriteAllText("ChunkShellcodeTextToVariableCSharp.cs", code);
                         break;
-                        case "-h":
+                    case "-HextoByteFile":
+                        if (File.Exists(args[1]))
+                        {
+                            File.WriteAllBytes("HextoByteFile.bin", Utils.StringToByteArray(File.ReadAllText(args[1])));
+                        }
+                        else
+                        {
+                            Console.WriteLine("[!] So you files isnt where you said it was. " + args[1]);
+                        }
+                        break;
+                    case "-h":
                             Usage();
                             break;
                         case "-help":
@@ -203,7 +227,7 @@ created by: Ceramicskate0
             -xor {Input .bin File Path} {XOR KEY}
             The command above will xor a byte file with a key and output it to XorShellcode.bin. This mean when you un-xor it you will need the same key.
 
-            -aes {Input .bin File Path} {AES KEY} {AES IV}
+            -aes {Input .bin File Path} HEX{AES_KEY} HEX{AES_IV} HEX{Junk bytes to add to front of shellcode}(optinoal) HEX{Junk bytes to add to end of shellcode}(optinoal)
              Read a byte file and will aes encrypt it with the provided Key and IV. Output file is EncryptedShellcode.bin
 
             -far {Input File or the file you want to search thru} {What you want to change} {What you want to change it to (File or string)(Will check to see if file exists if not assumes you wanted to use a string)}
