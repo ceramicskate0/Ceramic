@@ -29,6 +29,19 @@ namespace Ceramic
                 return new string(Enumerable.Repeat(chars, GetRandomInt(10)).Select(s => s[random.Next(s.Length)]).ToArray());
             }
         }
+        public static string RandomStringAlpha(int length = 0)
+        {
+            const string chars = "AABCDEEFGHIIJKLMNOOPQRSTUUVWXYyZqwertyuaeiouyiopasdfghjklzxcvbnm";
+
+            if (length > 0)
+            {
+                return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+            }
+            else
+            {
+                return new string(Enumerable.Repeat(chars, GetRandomInt(10)).Select(s => s[random.Next(s.Length)]).ToArray());
+            }
+        }
         public static string RandomSpecialChars(int length = 0)
         {
             const string chars = "!@#$%^&*()_+=-{}][|`~";
@@ -177,35 +190,70 @@ namespace Ceramic
             return bytes;
         }
 
-        public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode)
+        public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode, int wordlength = 20)
         {
-            Console.WriteLine("[*] Converting shellcode to randomwords that will represent byte values from 0-254 based on length of word.");
+            Console.WriteLine("[*] Creating the array to use to lookup shellcode.");
             string shellcodewWords="";
-            for (int i = 0; i < shellcode.Length; ++i)
+            string Carray = "{";
+            Dictionary<string, int> cipher = new Dictionary<string, int>(256);
+            for (int i = 0; i <= 255; ++i)
             {
-                if (i == shellcode.Length)
+                string thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
+                while (cipher.ContainsKey(thing) == true)
                 {
-                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]));
+                    thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
+                }
+                cipher.Add(thing, i);
+            }
+            int x = 0;
+            string codedArray = "";
+            string c_CodeArray1 = "{";
+            foreach (KeyValuePair<string, int> kvp in cipher)
+            {
+                if (x == cipher.Count-1)
+                {
+                    codedArray += kvp.Key;
+                    c_CodeArray1 += "\"" + kvp.Key + "\"";
                 }
                 else
                 {
-                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]))+",";
+                    codedArray += kvp.Key + ",";
+                    c_CodeArray1+= "\""+ kvp.Key + "\"" + ",";
+                }
+                ++x;
+            }
+            Console.WriteLine("[*] Writting the KeyArray.txt file that contains the array used/the key");
+            File.WriteAllText("KeyArray.txt", c_CodeArray1 + "}");
+            Console.WriteLine("[*] Using the newly created array to encode shellcode into strings.....this could be awhile (stageless is large)");
+            for (int i = 0; i <= shellcode.Length-1; ++i)
+            {
+                if (i == shellcode.Length-1)
+                {
+                    shellcodewWords += cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key;
+                    Carray+= "\""+ cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key+"\"";
+                }
+                else
+                {
+                    shellcodewWords += cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key + ",";
+                    Carray+= "\"" + cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key + "\"" + ",";
                 }
             }
+            Console.WriteLine("[*] Creating c code version of array of word that is the shellcode into C_codeArray.txt");
+            File.WriteAllText("C_codeArray.txt", Carray + "}");
             return shellcodewWords;
         }
 
-        public static string ConvertShellcodeToPreDefineRandomWordsBasedOnByte(byte[] shellcode)
+        public static string ConvertShellcodeToPreDefineRandomWordsBasedOnByte(byte[] shellcode, int wordlength=20)
         {
             Console.WriteLine("[*] Making Array of random words that will represent byte values from 0-254 based on location in array. Can be used to ref in you dropper for shellcode.");
             string codedArray = "";
-            Dictionary<string,int>cipher = new Dictionary<string,int> (255);
-            for (int i = 0; i < 255; ++i)
+            Dictionary<string,int>cipher = new Dictionary<string,int> (256);
+            for (int i = 0; i <= 255; ++i)
             {
-                string thing = RandomString(GetRandomInt(35, 2));
+                string thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
                 while (cipher.ContainsKey(thing)==true)
                 {
-                    thing = RandomString(GetRandomInt(20, 5));
+                    thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
                 }
                 cipher.Add(thing, i);
             }

@@ -70,11 +70,18 @@ namespace Ceramic
                                 Console.WriteLine("[!] So you files isnt where you said it was. " + args[1]);
                             }
                             break;
-                        case "-GenRandomWordArrayToRepresentShellcode":
+                        case "-GenRandomWordArray":
                             if (File.Exists(args[1]))
                             {
                                 byte[] tmp = File.ReadAllBytes(args[1]);
-                                File.WriteAllText("GenRandomWordArrayToRepresentShellcode.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp));
+                                if (args.Length == 3)
+                                {
+                                    File.WriteAllText("RandomWordArray.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp,Convert.ToInt32(args[2])));
+                                }
+                                else
+                                {
+                                    File.WriteAllText("RandomWordArray.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp));
+                                }
                             }
                             else
                             {
@@ -212,7 +219,7 @@ namespace Ceramic
             catch (Exception e)
             {
                 Usage();
-                Console.WriteLine("[Error] Invalid input " + e.Message.ToString());
+                Console.WriteLine("[Error] ERROR messgae =" + e.StackTrace.ToString()+ "\n"+e.Message.ToString());
             }
         }
         private static void PrintLogo()
