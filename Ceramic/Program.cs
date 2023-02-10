@@ -59,7 +59,29 @@ namespace Ceramic
                             Console.WriteLine("[*] Writing File ConvertToGUIDArray.txt");
                             File.WriteAllText("ConvertToGUIDArray.txt", BinaryOperations.ByteToGUID(File.ReadAllBytes(args[1])));
                             break;
-                        case "-aes":
+                        case "-ConvertShellcodeToRandomWords":
+                            if (File.Exists(args[1]))
+                            {
+                                byte[] tmp = File.ReadAllBytes(args[1]);
+                                File.WriteAllText("ConvertShellcodeToRandomWords.txt", Utils.ConvertShellcodeToRandomWordsBasedOnByte(tmp));
+                            }
+                            else
+                            {
+                                Console.WriteLine("[!] So you files isnt where you said it was. " + args[1]);
+                            }
+                            break;
+                        case "-GenRandomWordArrayToRepresentShellcode":
+                            if (File.Exists(args[1]))
+                            {
+                                byte[] tmp = File.ReadAllBytes(args[1]);
+                                File.WriteAllText("GenRandomWordArrayToRepresentShellcode.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp));
+                            }
+                            else
+                            {
+                                Console.WriteLine("[!] So you files isnt where you said it was. " + args[1]);
+                            }
+                            break;
+                         case "-aes":
                             try
                             {
                                 if (File.Exists(args[1]))
@@ -265,6 +287,12 @@ created by: Ceramicskate0
             
             -ConvertToGUIDArray (Input File Path}
             Take in a byte file and output a text file that is a array of GUID's that represents the input shellcode. Output file is ConvertToGUIDArray.txt.
+
+            -ConvertShellcodeToRandomWords (Input File Path}
+            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value.
+
+            -ChunkShellcodeTextToVariableCSharp (Input File Path}
+            Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
 
 ");
         }
