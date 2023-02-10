@@ -78,9 +78,7 @@ A simple dotNET 5.0 application I built to do common Red Teaming things for me. 
 
             -GenRandomWordArrayToRepresentShellcode (Input File Path}
             Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
-
-
-            
+           
             
 ## Install dotnet on Ubuntu:
 
@@ -109,24 +107,6 @@ Below is what was used/tested:
 ### Option 1 (Build it yourself)
 
 ``$ ~/Ceramic/Ceramic > dotnet run``
-
-### Option 2 (Run Prebuilt)
-
-``wget https://github.com/ceramicskate0/Ceramic/releases/download/1.0/Ceramic.exe``
-
-``wget https://github.com/ceramicskate0/Ceramic/releases/download/1.0/Ceramic.dll``
-
-``wget https://github.com/ceramicskate0/Ceramic/releases/download/1.0/Ceramic.runtimeconfig.json``
-
-``wget https://github.com/ceramicskate0/Ceramic/releases/download/1.0/Ceramic.deps.json``
-
-### Option 2.5 (Run Prebuilt)
-
-``wget https://github.com/ceramicskate0/Ceramic/releases/download/1.0/Ceramic.zip``
-
-``sudo apt install unzip -y``
-
-``unzip Ceramic.zip``
 
 ### Run (from Ceramic Dir)
 
