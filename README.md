@@ -34,7 +34,7 @@ A simple dotNET 5.0 application I built to do common Red Teaming things for me. 
             -xor {Input .bin File Path} {XOR KEY}
             The command above will xor a byte file with a key and output it to XorShellcode.bin. This mean when you un-xor it you will need the same key.
 
-            -aes {Input .bin File Path} {AES KEY} {AES IV}
+            -aes {Input .bin File Path} HEX{AES_KEY} HEX{AES_IV} HEX{Junk bytes to add to front of shellcode}(optinoal) HEX{Junk bytes to add to end of shellcode}(optinoal)
              Read a byte file and will aes encrypt it with the provided Key and IV. Output file is EncryptedShellcode.bin
 
             -far {Input File or the file you want to search thru} {What you want to change} {What you want to change it to (File or string)(Will check to see if file exists if not assumes you wanted to use a string)}
@@ -72,6 +72,13 @@ A simple dotNET 5.0 application I built to do common Red Teaming things for me. 
             
             -ConvertToGUIDArray (Input File Path}
             Take in a byte file and output a text file that is a array of GUID's that represents the input shellcode. Output file is ConvertToGUIDArray.txt.
+
+            -ConvertShellcodeToRandomWords (Input File Path}
+            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value.
+
+            -ChunkShellcodeTextToVariableCSharp (Input File Path}
+            Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
+
 
             
             
