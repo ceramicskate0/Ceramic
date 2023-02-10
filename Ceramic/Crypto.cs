@@ -9,62 +9,100 @@ namespace Ceramic
 {    
     static class Crypto
     {
-        //private static string aes_iv = "bsxnWolsAyO7kCfWuyrnqg==";
-        //private static string aes_key = "AXe8YwuIn1zxt3FPWTZFlAa14EHdPAdN9FaZ9RQWihc=";
-        
-        public static byte[] Encrypt(byte[] bytesToEncrypt, string password,string iv)
+        public static byte[] Encrypt(byte[] str, byte[] keys, byte[] iv, byte[] frontjunk = default, byte[] Backjunk= default)
         {
-            byte[] ivSeed = Guid.NewGuid().ToByteArray();
-
-            var rfc = new Rfc2898DeriveBytes(password, ivSeed);
-            //byte[] Key = Convert.FromBase64String(aes_key);
-            //byte[] IV = Convert.FromBase64String(aes_iv);;
-            byte[] Key = Encoding.Unicode.GetBytes(password);
-            byte[] IV = Encoding.Unicode.GetBytes(iv);
-
             byte[] encrypted;
-            using (MemoryStream mstream = new MemoryStream())
+            if (frontjunk != default && Backjunk != default)
             {
-                using (AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider())
+                byte[] bytes = new byte[str.Length + frontjunk.Length + Backjunk.Length];
+                Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
+                Console.WriteLine("[*] Byte Length at end/back of shellcode for junk bytes = " + Backjunk.Length);
+                Utils.AddtToEnd(str, Backjunk);
+                Utils.AddtToFront(str, frontjunk);
+                using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
                 {
-                    using (CryptoStream cryptoStream = new CryptoStream(mstream, aesProvider.CreateEncryptor(Key, IV), CryptoStreamMode.Write))
+                    aes.Key = keys;
+
+                    if (iv.Length <= 0)
                     {
-                        cryptoStream.Write(bytesToEncrypt, 0, bytesToEncrypt.Length);
+                        aes.GenerateIV();
+                    }
+                    else
+                    {
+                        aes.IV = iv;
+                    }
+                    Console.WriteLine("IV = " + aes.IV.ToString());
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
+
+                    using (MemoryStream msEncrypt = new MemoryStream())
+                    {
+                        msEncrypt.Write(aes.IV, 0, aes.IV.Length);
+                        ICryptoTransform encoder = aes.CreateEncryptor();
+                        using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encoder, CryptoStreamMode.Write))
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(bytes);
+                        }
+                        encrypted = msEncrypt.ToArray();
                     }
                 }
-                encrypted = mstream.ToArray();
             }
+            else
+            {
+                using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
+                {
+                    aes.Key = keys;
 
-            //var messageLengthAs32Bits = Convert.ToInt32(bytesToEncrypt.Length);
-            //var messageLength = BitConverter.GetBytes(messageLengthAs32Bits);
+                    if (iv.Length <= 0)
+                    {
+                        aes.GenerateIV();
+                    }
+                    else
+                    {
+                        aes.IV = iv;
+                    }
+                    Console.WriteLine("IV = " + aes.IV.ToString());
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
 
-            //encrypted = encrypted.Prepend(ivSeed);
-            //encrypted = encrypted.Prepend(messageLength);
+                    using (MemoryStream msEncrypt = new MemoryStream())
+                    {
+                        msEncrypt.Write(aes.IV, 0, aes.IV.Length);
+                        ICryptoTransform encoder = aes.CreateEncryptor();
+                        using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encoder, CryptoStreamMode.Write))
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(str);
+                        }
+                        encrypted = msEncrypt.ToArray();
+                    }
+                }
+            }
 
             return encrypted;
         }
-
-        //c# code to return unencrypted byte code
-        public static byte[] Decrypt(byte[] bytesToDecrypt, string password,string iv)
+        public static string Decrypt(byte[] cipherText, byte[] Key, byte[] IV)
         {
-            byte[] tmp;
-
-            var length = bytesToDecrypt.Length;
-            byte[] ivSeed = Guid.NewGuid().ToByteArray();
-            var rfc = new Rfc2898DeriveBytes(password, ivSeed);
-            //byte[] Key = Encoding.Unicode.GetBytes(password);
-
-            byte[] Key = Encoding.Unicode.GetBytes(password);
-            byte[] IV = Encoding.Unicode.GetBytes(iv);
-
-            using (MemoryStream mStream = new MemoryStream(bytesToDecrypt))
-            using (AesCryptoServiceProvider aesProvider = new AesCryptoServiceProvider() { Padding = PaddingMode.None })
-            using (CryptoStream cryptoStream = new CryptoStream(mStream, aesProvider.CreateDecryptor(Key, IV), CryptoStreamMode.Read))
+            string plaintext = null;
+            // Create AesManaged    
+            using (AesManaged aes = new AesManaged())
             {
-                cryptoStream.Read(bytesToDecrypt, 0, length);
-                tmp = mStream.ToArray().Take(length).ToArray();
+                // Create a decryptor    
+                ICryptoTransform decryptor = aes.CreateDecryptor(Key, IV);
+                // Create the streams used for decryption.    
+                using (MemoryStream ms = new MemoryStream(cipherText))
+                {
+                    // Create crypto stream    
+                    using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                    {
+                        // Read crypto stream    
+                        using (StreamReader reader = new StreamReader(cs))
+                            plaintext = reader.ReadToEnd();
+                    }
+                }
             }
-            return tmp;
+            return plaintext;
         }
 
         // Simple XOR routine from https://github.com/djhohnstein/CSharpCreateThreadExample

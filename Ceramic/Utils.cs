@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -11,13 +12,13 @@ namespace Ceramic
     {
         private static Random random = new Random(DateTime.Now.Millisecond);
 
-        public static int GetRandomInt(int max,int min=5)
+        public static int GetRandomInt(int max, int min = 5)
         {
             return random.Next(min, max);
         }
         public static string RandomString(int length = 0)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZqwertyuiopasdfghjklzxcvbnm_1234567890";
+            const string chars = "AABCDEEFGHIIJKLMNOOPQRSTUUVWXYyZqwertyuaeiouyiopasdfghjklzxcvbnm_1234567890";
 
             if (length > 0)
             {
@@ -47,17 +48,17 @@ namespace Ceramic
             Array.Reverse(charArray);
             return new string(charArray);
         }
-        public static string AddJunkToString(string originalString, string JunkToAdd = "", int StringLocationToStartAddingJunk=1)
+        public static string AddJunkToString(string originalString, string JunkToAdd = "", int StringLocationToStartAddingJunk = 1)
         {
             if (JunkToAdd == "")
             {
-                JunkToAdd = RandomSpecialChars(GetRandomInt(20,2));
+                JunkToAdd = RandomSpecialChars(GetRandomInt(20, 2));
             }
             Console.WriteLine("[+] Junk string added is:" + JunkToAdd);
             Random rand = new Random();
-            int numberOfTimeToAdd=rand.Next(0, originalString.Length);
+            int numberOfTimeToAdd = rand.Next(0, originalString.Length);
 
-            for (int x=0; x<numberOfTimeToAdd;++x)
+            for (int x = 0; x < numberOfTimeToAdd; ++x)
             {
                 originalString.Insert(x, JunkToAdd);
             }
@@ -66,6 +67,7 @@ namespace Ceramic
             Console.WriteLine(" [+] Junk string added " + numberOfTimeToAdd.ToString() + " times");
             return originalString;
         }
+
         public static string RandomStringWithSPace(int length = 0)
         {
             const string chars = "ABC DEFGHIJ KLMNOPQ RSTUVWXYZqwer tyu iopasdf ghjklzxc vbnm";
@@ -79,61 +81,34 @@ namespace Ceramic
                 return new string(Enumerable.Repeat(chars, GetRandomInt(10)).Select(s => s[random.Next(s.Length)]).ToArray());
             }
         }
-        public static byte[] CreateKey(string password, int keyBytes = 32)
-        {
-            const int Iterations = 300;
-            var keyGenerator = new Rfc2898DeriveBytes(password, new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF }, Iterations);
-            return keyGenerator.GetBytes(keyBytes);
-        }
-        // From: https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.aescryptoserviceprovider?view=netframework-4.7.2
-        public static byte[] EncryptStringToBytes_Aes(string plainTextInputData, byte[] Key, byte[] IV)
-        {
-            // Check arguments.
-            if (plainTextInputData == null || plainTextInputData.Length <= 0)
-                throw new ArgumentNullException("EncryptStringToBytes_Aes() plainText");
-            if (Key == null || Key.Length <= 0)
-                throw new ArgumentNullException("EncryptStringToBytes_Aes() Key");
-            if (IV == null || IV.Length <= 0)
-                throw new ArgumentNullException("EncryptStringToBytes_Aes() IV");
-            byte[] encrypted;
 
-            // Create an AesManaged object
-            // with the specified key and IV.
-            using (AesManaged aesAlg = new AesManaged())
-            {
-                aesAlg.Key = Key;
-                aesAlg.IV = IV;
-
-                // Create an encryptor to perform the stream transform.
-                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
-                // Create the streams used for encryption.
-                using (MemoryStream msEncrypt = new MemoryStream())
-                {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                    {
-                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                        {
-                            // Write all data to the crypto IO stream.
-                            swEncrypt.Write(plainTextInputData);
-                        }
-                        encrypted = msEncrypt.ToArray();
-                    }
-                }
-            }
-
-            // Return the encrypted bytes from the memory stream.
-            return encrypted;
-        }
         public static byte[] StringToByteArray(string hex)
         {
-            return Enumerable.Range(0, hex.Length)
-                             .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                             .ToArray();
+            if (hex.Length % 2 == 1)
+                throw new Exception("The binary key cannot have an odd number of digits");
+
+            byte[] arr = new byte[hex.Length >> 1];
+
+            for (int i = 0; i < hex.Length >> 1; ++i)
+            {
+                arr[i] = (byte)((GetHexVal(hex[i << 1]) << 4) + (GetHexVal(hex[(i << 1) + 1])));
+            }
+
+            return arr;
         }
 
-        public static string ReplaceHexString(List<string> BadStrings, string hexRepresentation,string StringToReplaceItWith="")
+        public static int GetHexVal(char hex)
+        {
+            int val = (int)hex;
+            //For uppercase A-F letters:
+            //return val - (val < 58 ? 48 : 55);
+            //For lowercase a-f letters:
+            //return val - (val < 58 ? 48 : 87);
+            //Or the two combined, but a bit slower:
+            return val - (val < 58 ? 48 : (val < 97 ? 55 : 87));
+        }
+
+        public static string ReplaceHexString(List<string> BadStrings, string hexRepresentation, string StringToReplaceItWith = "")
         {
             string NEWhexRepresentation = hexRepresentation;
             foreach (string sigString in BadStrings)
@@ -158,23 +133,98 @@ namespace Ceramic
             return NEWhexRepresentation;
         }
 
-    public static string StringToVariable(string InputString, string addBeforeString = "var ",string addAfterString="")
+        public static string StringToVariable(string InputString, string addBeforeString = "var ", string addAfterString = "")
         {
-            List<string> Chunks=ChunkString(InputString, GetRandomInt(30, 10));
+            List<string> Chunks = ChunkString(InputString, GetRandomInt(30, 10));
 
-            string code="";
+            string code = "";
 
             for (int x = 0; x < Chunks.Count; ++x)
             {
-                code += code + addBeforeString+Chunks.ElementAt(x)+ addAfterString;
+                code += code + addBeforeString + Chunks.ElementAt(x) + addAfterString;
             }
             return code;
         }
+
         private static List<string> ChunkString(string str, int chunkSize)
         {
             return Enumerable.Range(0, str.Length / chunkSize).Select(i => str.Substring(i * chunkSize, chunkSize)).ToList();
         }
+
+        public static byte[] AddtToEnd(byte[] first, byte[] second)
+        {
+            byte[] bytes = new byte[first.Length + second.Length];
+            //Console.WriteLine(first[first.Length - 3] + " "+ first[first.Length - 2] + " " + first[first.Length - 1]);
+            //Console.WriteLine(second[second.Length - 3] + " " + second[second.Length - 2] + " " + second[second.Length - 1]);
+
+            Buffer.BlockCopy(first, 0, bytes, 0, first.Length);
+            Buffer.BlockCopy(second, 0, bytes, first.Length, second.Length);
+
+            //Console.WriteLine(bytes[bytes.Length - 3] + " " + bytes[bytes.Length - 2] + " " + bytes[bytes.Length - 1]);
+            return bytes;
+        }
+
+        public static byte[] AddtToFront(byte[] first, byte[] second)
+        {
+            byte[] bytes = new byte[second.Length + first.Length];
+            //Console.WriteLine(first[0] + " " + first[1] + " " + first[2]);
+            //Console.WriteLine(second[0] + " " + second[1] + " " + second[2]);
+
+            Buffer.BlockCopy(second, 0, bytes, 0, second.Length);
+            Buffer.BlockCopy(first, 0, bytes, second.Length, first.Length);
+
+            //Console.WriteLine(bytes[0] + " " + bytes[1] + " " + bytes[2]);
+            return bytes;
+        }
+
+        public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode)
+        {
+            Console.WriteLine("[*] Converting shellcode to randomwords that will represent byte values from 0-254 based on length of word.");
+            string shellcodewWords="";
+            for (int i = 0; i < shellcode.Length; ++i)
+            {
+                if (i == shellcode.Length)
+                {
+                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]));
+                }
+                else
+                {
+                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]))+",";
+                }
+            }
+            return shellcodewWords;
+        }
+
+        public static string ConvertShellcodeToPreDefineRandomWordsBasedOnByte(byte[] shellcode)
+        {
+            Console.WriteLine("[*] Making Array of random words that will represent byte values from 0-254 based on location in array. Can be used to ref in you dropper for shellcode.");
+            string codedArray = "";
+            Dictionary<string,int>cipher = new Dictionary<string,int> (255);
+            for (int i = 0; i < 255; ++i)
+            {
+                string thing = RandomString(GetRandomInt(35, 2));
+                while (cipher.ContainsKey(thing)==true)
+                {
+                    thing = RandomString(GetRandomInt(20, 5));
+                }
+                cipher.Add(thing, i);
+            }
+            int x = 0;
+            foreach (KeyValuePair<string, int> kvp in cipher)
+            {
+                if (x == cipher.Count)
+                {
+                    codedArray += kvp.Key;
+                }
+                else
+                {
+                    codedArray += kvp.Key + ",";
+                }
+                ++x;
+            }
+            return codedArray;
+        }
+
     }
 }
-
 

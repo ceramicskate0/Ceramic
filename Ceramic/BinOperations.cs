@@ -80,7 +80,7 @@ namespace Ceramic
         public static byte[] BinaryFileRead(string FilePath)
         {
             System.IO.FileStream fileStream = new System.IO.FileStream(FilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            System.IO.BinaryReader binReader = new System.IO.BinaryReader(fileStream, Utils.GetEncoding(FilePath));
+            System.IO.BinaryReader binReader = new System.IO.BinaryReader(fileStream);
             byte[] fileBytes = binReader.ReadBytes((int)fileStream.Length);
             binReader.Close();
             fileStream.Close();
