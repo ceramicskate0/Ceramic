@@ -14,14 +14,19 @@ namespace Ceramic
             byte[] encrypted;
             if (frontjunk != default && Backjunk != default)
             {
-                byte[] bytes = new byte[str.Length + frontjunk.Length + Backjunk.Length];
-                Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
-                Console.WriteLine("[*] Byte Length at end/back of shellcode for junk bytes = " + Backjunk.Length);
-                Utils.AddtToEnd(str, Backjunk);
-                Utils.AddtToFront(str, frontjunk);
-                using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
+                byte[] bytes = new byte[str.Length];
+                using (Aes aes = Aes.Create())
                 {
-                    aes.Key = keys;
+                    try
+                    {
+                        aes.Key = keys;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("[!] AES error = " + e.Message.ToString());
+                        Console.WriteLine("[!] Making random key to fix error for you");
+                        aes.GenerateKey();
+                    }
 
                     if (iv.Length <= 0)
                     {
@@ -29,9 +34,19 @@ namespace Ceramic
                     }
                     else
                     {
-                        aes.IV = iv;
+                        try
+                        {
+                            aes.IV = iv;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("[!] AES error = " + e.Message.ToString());
+                            Console.WriteLine("[!] Making random IV to fix error for you");
+                            aes.GenerateIV();
+                        }
                     }
-                    Console.WriteLine("IV = " + aes.IV.ToString());
+                    Console.WriteLine("Key = " + Utils.ByteArrayToHexString(aes.Key));
+                    Console.WriteLine("IV = " + Utils.ByteArrayToHexString(aes.IV));
                     aes.Mode = CipherMode.CBC;
                     aes.Padding = PaddingMode.PKCS7;
 
@@ -46,6 +61,10 @@ namespace Ceramic
                         }
                         encrypted = msEncrypt.ToArray();
                     }
+                    Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
+                    Console.WriteLine("[*] Byte Length at end/back of shellcode for junk bytes = " + Backjunk.Length);
+                    Utils.AddtToEnd(encrypted, Backjunk);
+                    Utils.AddtToFront(encrypted, frontjunk);
                 }
             }
             else
@@ -79,7 +98,6 @@ namespace Ceramic
                     }
                 }
             }
-
             return encrypted;
         }
         public static string Decrypt(byte[] cipherText, byte[] Key, byte[] IV)

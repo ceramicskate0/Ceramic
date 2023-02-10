@@ -62,8 +62,20 @@ namespace Ceramic
                         case "-ConvertShellcodeToRandomWords":
                             if (File.Exists(args[1]))
                             {
+                            if (args.Length == 2)
+                            {
                                 byte[] tmp = File.ReadAllBytes(args[1]);
                                 File.WriteAllText("ConvertShellcodeToRandomWords.txt", Utils.ConvertShellcodeToRandomWordsBasedOnByte(tmp));
+                            }
+                            else if (args.Length==3)
+                            {
+                                byte[] tmp = File.ReadAllBytes(args[1]);
+                                File.WriteAllText("ConvertShellcodeToRandomWords.txt", Utils.ConvertShellcodeToRandomWordsBasedOnByte(tmp, Convert.ToInt32(args[2])));
+                            }
+                            else
+                            {
+                                Console.WriteLine("[!] So you rnumber of args is wrong");
+                            }
                             }
                             else
                             {
@@ -106,6 +118,9 @@ namespace Ceramic
                                         Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
                                         File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
                                         File.WriteAllBytes("EncryptedShellcode.bin", tmp);
+                                        Console.WriteLine(Utils.CSharpAESDecryptCode());
+                                        Console.WriteLine("[*] Writing File 'DecryptAES.cs' to show you how to decrypt code. Does not account for any junk bytes.");
+                                        File.WriteAllText("DecryptAES.cs", Utils.CSharpAESDecryptCode());
                                     }
                                     else
                                     {
