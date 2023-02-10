@@ -291,7 +291,7 @@ created by: Ceramicskate0
             -ConvertShellcodeToRandomWords (Input File Path}
             Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value.
 
-            -ChunkShellcodeTextToVariableCSharp (Input File Path}
+            -GenRandomWordArrayToRepresentShellcode (Input File Path}
             Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
 
 ");
