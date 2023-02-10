@@ -73,10 +73,10 @@ A simple dotNET 5.0 application I built to do common Red Teaming things for me. 
             -ConvertToGUIDArray (Input File Path}
             Take in a byte file and output a text file that is a array of GUID's that represents the input shellcode. Output file is ConvertToGUIDArray.txt.
 
-            -ConvertShellcodeToRandomWords (Input File Path}
-            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value.
+            -ConvertShellcodeToRandomWords (Input File Path} {Max word length}(optional)
+            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value. outputs 3 files 1 with c styled array, 1 with csv word list, 1 with byte array key.
 
-            -GenRandomWordArrayToRepresentShellcode (Input File Path}
+            -GenRandomWordArray (Input File Path} {Max word length}(optional)
             Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
 
 
