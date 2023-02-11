@@ -7,7 +7,7 @@
              \____/  \___||_|   \__,_||_| |_| |_||_| \___|
               created by: Ceramicskate0
 
-A simple dotNET 5.0 application I built to do common Red Teaming things for me. This way no dotnet core and will run on Linux and windows. Think of this like a multi tool om for educational red teaming.
+A simple dotNET 5.0 application I built to do common Red Teaming things for me. This way no dotnet core and will run on Linux and windows. Think of this like a multi tool for educational red teaming.
 
 # Like the work dont forget to hit that Star Button and Sponsor
 
