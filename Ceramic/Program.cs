@@ -62,19 +62,38 @@ namespace Ceramic
                         case "-ConvertShellcodeToRandomWords":
                             if (File.Exists(args[1]))
                             {
+                            if (args.Length == 2)
+                            {
                                 byte[] tmp = File.ReadAllBytes(args[1]);
                                 File.WriteAllText("ConvertShellcodeToRandomWords.txt", Utils.ConvertShellcodeToRandomWordsBasedOnByte(tmp));
+                            }
+                            else if (args.Length==3)
+                            {
+                                byte[] tmp = File.ReadAllBytes(args[1]);
+                                File.WriteAllText("ConvertShellcodeToRandomWords.txt", Utils.ConvertShellcodeToRandomWordsBasedOnByte(tmp, Convert.ToInt32(args[2])));
+                            }
+                            else
+                            {
+                                Console.WriteLine("[!] So you rnumber of args is wrong");
+                            }
                             }
                             else
                             {
                                 Console.WriteLine("[!] So you files isnt where you said it was. " + args[1]);
                             }
                             break;
-                        case "-GenRandomWordArrayToRepresentShellcode":
+                        case "-GenRandomWordArray":
                             if (File.Exists(args[1]))
                             {
                                 byte[] tmp = File.ReadAllBytes(args[1]);
-                                File.WriteAllText("GenRandomWordArrayToRepresentShellcode.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp));
+                                if (args.Length == 3)
+                                {
+                                    File.WriteAllText("RandomWordArray.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp,Convert.ToInt32(args[2])));
+                                }
+                                else
+                                {
+                                    File.WriteAllText("RandomWordArray.txt", Utils.ConvertShellcodeToPreDefineRandomWordsBasedOnByte(tmp));
+                                }
                             }
                             else
                             {
@@ -99,6 +118,9 @@ namespace Ceramic
                                         Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
                                         File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
                                         File.WriteAllBytes("EncryptedShellcode.bin", tmp);
+                                        Console.WriteLine(Utils.CSharpAESDecryptCode());
+                                        Console.WriteLine("[*] Writing File 'DecryptAES.cs' to show you how to decrypt code. Does not account for any junk bytes.");
+                                        File.WriteAllText("DecryptAES.cs", Utils.CSharpAESDecryptCode());
                                     }
                                     else
                                     {
@@ -212,7 +234,7 @@ namespace Ceramic
             catch (Exception e)
             {
                 Usage();
-                Console.WriteLine("[Error] Invalid input " + e.Message.ToString());
+                Console.WriteLine("[Error] ERROR messgae =" + e.StackTrace.ToString()+ "\n"+e.Message.ToString());
             }
         }
         private static void PrintLogo()
@@ -288,10 +310,10 @@ created by: Ceramicskate0
             -ConvertToGUIDArray (Input File Path}
             Take in a byte file and output a text file that is a array of GUID's that represents the input shellcode. Output file is ConvertToGUIDArray.txt.
 
-            -ConvertShellcodeToRandomWords (Input File Path}
-            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value.
+            -ConvertShellcodeToRandomWords (Input File Path} {Max word length}(optional)
+            Convert shellcode to random words that will represent byte values from 0-255 based on length of word. This will be an array of random words per byte that map to byte value. outputs 3 files 1 with c styled array, 1 with csv word list, 1 with byte array key.
 
-            -GenRandomWordArrayToRepresentShellcode (Input File Path}
+            -GenRandomWordArray (Input File Path} {Max word length}(optional)
             Making Array of random words that will represent byte values from 0-255 based on location in array. Can be used to ref in you dropper for shellcode. This will be an array of size 256 that could be used to lookup byte number based on word position in array.
 
 ");

