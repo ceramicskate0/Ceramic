@@ -45,12 +45,12 @@ namespace Ceramic
                             aes.GenerateIV();
                         }
                     }
-                    Console.WriteLine("Key = " + Utils.ByteArrayToHexString(aes.Key));
-                    Console.WriteLine("IV = " + Utils.ByteArrayToHexString(aes.IV));
+                    Console.WriteLine("[+] Key = " + Utils.ByteArrayToHexString(aes.Key));
+                    Console.WriteLine("[+] IV = " + Utils.ByteArrayToHexString(aes.IV));
                     aes.Mode = CipherMode.CBC;
                     aes.Padding = PaddingMode.PKCS7;
 
-                    using (MemoryStream msEncrypt = new MemoryStream())
+                    using (MemoryStream msEncrypt = new MemoryStream(str))
                     {
                         msEncrypt.Write(aes.IV, 0, aes.IV.Length);
                         ICryptoTransform encoder = aes.CreateEncryptor();
@@ -61,10 +61,16 @@ namespace Ceramic
                         }
                         encrypted = msEncrypt.ToArray();
                     }
-                    Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
+                    Console.WriteLine("[*] Starting Encrypted Shellcode Length: " + encrypted.Length+"\n");
+                    bytes=Utils.AddtToEnd(encrypted, Backjunk);
                     Console.WriteLine("[*] Byte Length at end/back of shellcode for junk bytes = " + Backjunk.Length);
-                    Utils.AddtToEnd(encrypted, Backjunk);
-                    Utils.AddtToFront(encrypted, frontjunk);
+                    Console.WriteLine("[*] Code appended to back Shellcode Length: " + bytes.Length);
+                    bytes =Utils.AddtToFront(bytes, frontjunk);
+                    Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
+                    Console.WriteLine("[*] Code appended to front Shellcode Length: " + bytes.Length);
+                    Console.WriteLine("[*] Shellcode Length should be: " + (Backjunk.Length + frontjunk.Length + encrypted.Length));
+                    Console.WriteLine("[*] Encrypted Shellcode Length: " + bytes.Length);
+                    return bytes;
                 }
             }
             else

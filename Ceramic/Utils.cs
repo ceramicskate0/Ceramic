@@ -166,28 +166,12 @@ namespace Ceramic
 
         public static byte[] AddtToEnd(byte[] first, byte[] second)
         {
-            byte[] bytes = new byte[first.Length + second.Length];
-            //Console.WriteLine(first[first.Length - 3] + " "+ first[first.Length - 2] + " " + first[first.Length - 1]);
-            //Console.WriteLine(second[second.Length - 3] + " " + second[second.Length - 2] + " " + second[second.Length - 1]);
-
-            Buffer.BlockCopy(first, 0, bytes, 0, first.Length);
-            Buffer.BlockCopy(second, 0, bytes, first.Length, second.Length);
-
-            //Console.WriteLine(bytes[bytes.Length - 3] + " " + bytes[bytes.Length - 2] + " " + bytes[bytes.Length - 1]);
-            return bytes;
+            return second.Concat(first).ToArray();
         }
 
         public static byte[] AddtToFront(byte[] first, byte[] second)
         {
-            byte[] bytes = new byte[second.Length + first.Length];
-            //Console.WriteLine(first[0] + " " + first[1] + " " + first[2]);
-            //Console.WriteLine(second[0] + " " + second[1] + " " + second[2]);
-
-            Buffer.BlockCopy(second, 0, bytes, 0, second.Length);
-            Buffer.BlockCopy(first, 0, bytes, second.Length, first.Length);
-
-            //Console.WriteLine(bytes[0] + " " + bytes[1] + " " + bytes[2]);
-            return bytes;
+            return first.Concat(second).ToArray();
         }
 
         public static string ConvertShellcodeToRandomWordsBasedOnByte(byte[] shellcode, int wordlength = 20)
