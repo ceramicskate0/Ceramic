@@ -9,17 +9,19 @@ namespace Ceramic
 {    
     static class Crypto
     {
-        public static byte[] Encrypt(byte[] str, byte[] keys, byte[] iv, byte[] frontjunk = default, byte[] Backjunk= default)
+        public static byte[] Encrypt(byte[] data, byte[] key, byte[] iv, byte[] frontjunk = default, byte[] Backjunk= default)
         {
             byte[] encrypted;
+            Console.WriteLine("[*] First 2 bytes of unencrypted bin: " + data[0] + " " + data[1]);
+            Console.WriteLine("[*] Last 2 bytes of unencrypted bin: " + data[data.Length - 2] + " " + data[data.Length - 1]+"\n");
             if (frontjunk != default && Backjunk != default)
             {
-                byte[] bytes = new byte[str.Length];
+                byte[] bytes = new byte[data.Length];
                 using (Aes aes = Aes.Create())
                 {
                     try
                     {
-                        aes.Key = keys;
+                        aes.Key = key;
                     }
                     catch (Exception e)
                     {
@@ -47,37 +49,53 @@ namespace Ceramic
                     }
                     Console.WriteLine("[+] Key = " + Utils.ByteArrayToHexString(aes.Key));
                     Console.WriteLine("[+] IV = " + Utils.ByteArrayToHexString(aes.IV));
+                    Console.WriteLine("[*] Writing AES KEy and IV to disk AESinfo.txt");
+                    File.WriteAllText("AESinfo.txt", "KEY=" + Utils.ByteArrayToHexString(aes.Key)+"\nIV=" + Utils.ByteArrayToHexString(aes.IV)+ "\nfrontjunk="+ frontjunk.Length+ "\nBackjunk="+ Backjunk.Length);
                     aes.Mode = CipherMode.CBC;
-                    aes.Padding = PaddingMode.PKCS7;
+                    aes.Padding = PaddingMode.Zeros;
 
-                    using (MemoryStream msEncrypt = new MemoryStream(str))
-                    {
-                        msEncrypt.Write(aes.IV, 0, aes.IV.Length);
-                        ICryptoTransform encoder = aes.CreateEncryptor();
-                        using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encoder, CryptoStreamMode.Write))
-                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                    // Create an encryptor to perform the stream transform.
+                    ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+                        // Create the streams used for encryption.
+                        using (MemoryStream msEncrypt = new MemoryStream())
                         {
-                            swEncrypt.Write(bytes);
+                            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                            {
+                                csEncrypt.Write(data, 0, data.Length);
+                                csEncrypt.FlushFinalBlock();
+
+                                encrypted = msEncrypt.ToArray();
+                            }
                         }
-                        encrypted = msEncrypt.ToArray();
-                    }
-                    Console.WriteLine("[*] Starting Encrypted Shellcode Length: " + encrypted.Length+"\n");
-                    bytes=Utils.AddtToEnd(encrypted, Backjunk);
+
+                    Console.WriteLine("\n[*] Starting Encrypted Shellcode Length: " + encrypted.Length + "\n");
+                    bytes=Utils.AddToArray(encrypted, Backjunk);
+                    Console.WriteLine("[*] First 2 bytes of start Array: " + encrypted[0] + " " + encrypted[1]);
+                    Console.WriteLine("[*] Last 2 bytes of back Junk Array: " + Backjunk[Backjunk.Length-2] + " " + Backjunk[Backjunk.Length-1]);
+                    Console.WriteLine("[*] First 2 bytes of back New/final Array: " + bytes[0] + " " + bytes[1]);
+                    Console.WriteLine("[*] Last 2 bytes of back New/final Array: " + Backjunk[Backjunk.Length - 2] + " " + Backjunk[Backjunk.Length - 1]);
                     Console.WriteLine("[*] Byte Length at end/back of shellcode for junk bytes = " + Backjunk.Length);
-                    Console.WriteLine("[*] Code appended to back Shellcode Length: " + bytes.Length);
-                    bytes =Utils.AddtToFront(bytes, frontjunk);
+                    Console.WriteLine("[*] Code appended to back Shellcode Length: " + bytes.Length + "\n");
+
+                    byte[] bytes2 = Utils.AddToArray(frontjunk, bytes);
+                    Console.WriteLine("[*] First 2 bytes of start Array: " + bytes[0] + " " + bytes[1]);
+                    Console.WriteLine("[*] First 2 bytes of front Junk Array: " + frontjunk[0] + " " + frontjunk[1]);
+                    Console.WriteLine("[*] First 2 bytes of front New/final Array: " + bytes2[0] + " " + bytes2[1]);
+                    Console.WriteLine("[*] Last 2 bytes of back Junk Array: " + Backjunk[Backjunk.Length - 2] + " " + Backjunk[Backjunk.Length - 1]);
+                    Console.WriteLine("[*] Last 2 bytes of New/final Array: " + bytes2[bytes2.Length - 2] + " " + bytes2[bytes2.Length - 1]);
                     Console.WriteLine("[*] Byte Length at start/front of shellcode for junk bytes = " + frontjunk.Length);
-                    Console.WriteLine("[*] Code appended to front Shellcode Length: " + bytes.Length);
-                    Console.WriteLine("[*] Shellcode Length should be: " + (Backjunk.Length + frontjunk.Length + encrypted.Length));
-                    Console.WriteLine("[*] Encrypted Shellcode Length: " + bytes.Length);
-                    return bytes;
+                    Console.WriteLine("[*] Code appended to front Shellcode Length: " + bytes2.Length + "\n");
+                    Console.WriteLine("\n[*] Shellcode Length should be: " + (Backjunk.Length + frontjunk.Length + encrypted.Length));
+                    Console.WriteLine("[*] Encrypted Shellcode Length: " + bytes2.Length);
+                    return bytes2;
                 }
             }
             else
             {
                 using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
                 {
-                    aes.Key = keys;
+                    aes.Key = key;
 
                     if (iv.Length <= 0)
                     {
@@ -98,7 +116,7 @@ namespace Ceramic
                         using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encoder, CryptoStreamMode.Write))
                         using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
                         {
-                            swEncrypt.Write(str);
+                            swEncrypt.Write(data);
                         }
                         encrypted = msEncrypt.ToArray();
                     }
@@ -106,29 +124,18 @@ namespace Ceramic
             }
             return encrypted;
         }
-        public static string Decrypt(byte[] cipherText, byte[] Key, byte[] IV)
-        {
-            string plaintext = null;
-            // Create AesManaged    
-            using (AesManaged aes = new AesManaged())
-            {
-                // Create a decryptor    
-                ICryptoTransform decryptor = aes.CreateDecryptor(Key, IV);
-                // Create the streams used for decryption.    
-                using (MemoryStream ms = new MemoryStream(cipherText))
-                {
-                    // Create crypto stream    
-                    using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
-                    {
-                        // Read crypto stream    
-                        using (StreamReader reader = new StreamReader(cs))
-                            plaintext = reader.ReadToEnd();
-                    }
-                }
-            }
-            return plaintext;
-        }
 
+        private static byte[] PerformCryptography(byte[] data, ICryptoTransform cryptoTransform)
+        {
+            using (var ms = new MemoryStream())
+            using (var cryptoStream = new CryptoStream(ms, cryptoTransform, CryptoStreamMode.Write))
+            {
+                cryptoStream.Write(data, 0, data.Length);
+                cryptoStream.FlushFinalBlock();
+
+                return ms.ToArray();
+            }
+        }
         // Simple XOR routine from https://github.com/djhohnstein/CSharpCreateThreadExample
         private static byte[] XorByteArray(byte[] origBytes, char[] cryptor)
         {

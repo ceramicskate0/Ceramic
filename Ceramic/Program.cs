@@ -114,7 +114,9 @@ namespace Ceramic
                                     }
                                     else if (args.Length == 6)
                                     {
-                                        byte[] tmp = Crypto.Encrypt(File.ReadAllBytes(args[1]), Utils.StringToByteArray(args[2]), Utils.StringToByteArray(args[3]), Utils.StringToByteArray(args[4]), Utils.StringToByteArray(args[5]));
+                                        Console.WriteLine("Junk Length Front: " + args[4].ToLower().Replace("\\x", "").Length);
+                                        Console.WriteLine("Junk Length Back: " + args[5].ToLower().Replace("\\x", "").Length);
+                                        byte[] tmp = Crypto.Encrypt(File.ReadAllBytes(args[1]), Utils.StringToByteArray(args[2]), Utils.StringToByteArray(args[3]), Utils.StringToByteArray(args[4].ToLower().Replace("\\x", "")), Utils.StringToByteArray(args[5].ToLower().Replace("\\x", "")));
                                         Console.WriteLine("[*] Writing File 'EncryptedShellcode.bin' and 'EncryptedShellcodeB64.txt' to current dir");
                                         File.WriteAllText("EncryptedShellcodeB64.txt", Convert.ToBase64String(tmp));
                                         File.WriteAllBytes("EncryptedShellcode.bin", tmp);
