@@ -14,6 +14,7 @@ namespace Ceramic
             byte[] encrypted;
             Console.WriteLine("[*] First 2 bytes of unencrypted bin: " + data[0] + " " + data[1]);
             Console.WriteLine("[*] Last 2 bytes of unencrypted bin: " + data[data.Length - 2] + " " + data[data.Length - 1]+"\n");
+            Console.WriteLine("[*] Length of unencrypted bin file: " + data.Length);
             if (frontjunk != default && Backjunk != default)
             {
                 byte[] bytes = new byte[data.Length];
@@ -49,6 +50,8 @@ namespace Ceramic
                     }
                     Console.WriteLine("[+] Key = " + Utils.ByteArrayToHexString(aes.Key));
                     Console.WriteLine("[+] IV = " + Utils.ByteArrayToHexString(aes.IV));
+                    Console.WriteLine("[+] C# Key = " + Utils.ByteArrayToHexString(aes.Key).Replace("\\", "\\\\")); 
+                    Console.WriteLine("[+] C# IV = " + Utils.ByteArrayToHexString(aes.IV).Replace("\\", "\\\\"));
                     Console.WriteLine("[*] Writing AES KEy and IV to disk AESinfo.txt");
                     File.WriteAllText("AESinfo.txt", "KEY=" + Utils.ByteArrayToHexString(aes.Key)+"\nIV=" + Utils.ByteArrayToHexString(aes.IV)+ "\nfrontjunk="+ frontjunk.Length+ "\nBackjunk="+ Backjunk.Length);
                     aes.Mode = CipherMode.CBC;

