@@ -97,17 +97,13 @@ namespace Ceramic
 
         public static byte[] StringToByteArray(string hex)
         {
-            if (hex.Length % 2 == 1)
-                throw new Exception("The binary key cannot have an odd number of digits");
-
-            byte[] arr = new byte[hex.Length >> 1];
-
-            for (int i = 0; i < hex.Length >> 1; ++i)
+            byte[] bytes = new byte[hex.Length / 2];
+            for (int i = 0; i < hex.Length; i += 2)
             {
-                arr[i] = (byte)((GetHexVal(hex[i << 1]) << 4) + (GetHexVal(hex[(i << 1) + 1])));
+                hex = hex.ToLower().Replace("\\x", "");
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
             }
-
-            return arr;
+            return bytes;
         }
 
         public static int GetHexVal(char hex)
@@ -164,12 +160,7 @@ namespace Ceramic
             return Enumerable.Range(0, str.Length / chunkSize).Select(i => str.Substring(i * chunkSize, chunkSize)).ToList();
         }
 
-        public static byte[] AddtToEnd(byte[] first, byte[] second)
-        {
-            return second.Concat(first).ToArray();
-        }
-
-        public static byte[] AddtToFront(byte[] first, byte[] second)
+        public static byte[] AddToArray(byte[] first, byte[] second)
         {
             return first.Concat(second).ToArray();
         }
@@ -267,49 +258,45 @@ namespace Ceramic
 
         public static string CSharpAESDecryptCode()
         {
-            return @"        
-        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
-        {
-            // Check arguments.
-            if (cipherText == null || cipherText.Length <= 0)
-                throw new ArgumentNullException(\""cipherText\"");
-            if (Key == null || Key.Length <= 0)
-                throw new ArgumentNullException(\""Key\"");
-            if (IV == null || IV.Length <= 0)
-                throw new ArgumentNullException(\""IV\"");
+            return @"
 
-            // Declare the string used to hold
-            // the decrypted text.
-            string plaintext = null;
+            byte[] key = StringToByteArray(\\""\\HEX\\HEX\\"").ToLower().Replace(\\""\\x\\"", \\""\\"").Replace(\\""\\\\"", \\""\\""));
+            byte[] iv = StringToByteArray(\\""\\HEX\\HEX\\"").ToLower().Replace(\\""\\x\\"", \\""\\"").Replace(\\""\\\\"", \\""\\""));
 
-            // Create an Aes object
-            // with the specified key and IV.
-            using (Aes aesAlg = Aes.Create())
+            byte[] shellcode = AES.DecryptStringFromBytes_Aes(shellcode, key, iv);
+
+
+            class AES
             {
-                aesAlg.Key = Key;
-                aesAlg.IV = IV;
-
-                // Create a decryptor to perform the stream transform.
-                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-
-                // Create the streams used for decryption.
-                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                public static byte[] DecryptStringFromBytes_Aes(byte[] data, byte[] key, byte[] iv)
                 {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    using (var aes = Aes.Create())
                     {
-                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
-                        {
+                        aes.KeySize = 128;
+                        aes.BlockSize = 128;
+                        aes.Padding = PaddingMode.Zeros;
 
-                            // Read the decrypted bytes from the decrypting stream
-                            // and place them in a string.
-                            plaintext = srDecrypt.ReadToEnd();
+                        aes.Key = key;
+                        aes.IV = iv;
+
+                        using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+                        {
+                            return PerformCryptography(data, decryptor);
                         }
                     }
                 }
-            }
+                private static byte[] PerformCryptography(byte[] data, ICryptoTransform cryptoTransform)
+                {
+                    using (var ms = new MemoryStream())
+                    using (var cryptoStream = new CryptoStream(ms, cryptoTransform, CryptoStreamMode.Write))
+                    {
+                        cryptoStream.Write(data, 0, data.Length);
+                        cryptoStream.FlushFinalBlock();
 
-            return plaintext;
-        }";
+                        return ms.ToArray();
+                    }
+                }
+            }";
         }
     }
 }
