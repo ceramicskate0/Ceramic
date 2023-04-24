@@ -71,7 +71,13 @@ namespace Ceramic
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
         }
-
+        public static string ByteArrayToHEXStringCStyle(byte[] ba)
+        {
+            StringBuilder hex = new StringBuilder(ba.Length * 2);
+            foreach (byte b in ba)
+                hex.AppendFormat("\\x{0:x2}", b);
+            return hex.ToString();
+        }
         public static byte[] ReadPEFile(string FilePath)
         {
             return Convert.FromBase64String(Convert.ToBase64String(File.ReadAllBytes(FilePath)));

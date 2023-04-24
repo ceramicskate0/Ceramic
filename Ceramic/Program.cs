@@ -145,8 +145,9 @@ namespace Ceramic
                                 if (File.Exists(args[1]))
                                 {
                                     byte[] tmp = File.ReadAllBytes(args[1]);
-                                    Console.WriteLine("[*] Writing File 'HexCodeOuput.txt' to current dir");
+                                    Console.WriteLine("[*] Writing File 'HexCodeOuput.txt' and 'CstyleHexCodeOuput.txt' to current dir");
                                     File.WriteAllText("HexCodeOuput.txt", BinaryOperations.ByteArrayToHEXString(tmp));
+                                    File.WriteAllText("CstyleHexCodeOuput.txt", BinaryOperations.ByteArrayToHEXStringCStyle(tmp));
                                 }
                                 else
                                 {
